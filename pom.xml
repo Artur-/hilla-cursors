@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
         <hilla.version>1.1.0.alpha4</hilla.version>
     </properties>
 
