@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 
@@ -13,13 +14,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import dev.hilla.Endpoint;
+import dev.hilla.EndpointSubscription;
 import dev.hilla.Nonnull;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.core.publisher.Sinks.EmitResult;
 import reactor.core.publisher.Sinks.Many;
-import reactor.core.scheduler.Scheduler;
 
 @AnonymousAllowed
 @Endpoint
@@ -43,34 +44,49 @@ public class CursorTracker {
     public UUID join(@Nonnull String name) {
         UUID id = UUID.randomUUID();
 
-        Cursor c = new Cursor();
-        c.setName(name);
-        c.setColor(colors[id.toString().charAt(0) % colors.length]);
-        c.setId(id);
-        cursors.put(id, c);
-
+        Cursor cursor = new Cursor();
+        cursor.setName(name);
+        cursor.setColor(colors[id.toString().charAt(0) % colors.length]);
+        cursor.setId(id);
+        cursors.put(id, cursor);
+        getLogger().info("Registered new cursor " + cursor);
+        logCursors();
         return id;
+    }
+
+    private void logCursors() {
+        getLogger().info("Cursors are now:"
+                + cursors.values().stream().map(cursor -> "\n" + cursor).collect(Collectors.joining()));
+
     }
 
     @Nonnull
     public List<@Nonnull Cursor> getCursors(@Nonnull UUID ownerId) {
-        System.out.println("Sending " + cursors.values());
         return cursors.entrySet().stream().filter(entry -> !entry.getKey().equals(ownerId))
                 .map(entry -> entry.getValue()).toList();
     }
 
     @Nonnull
-    public Flux<@Nonnull Cursor> subscribe(@Nonnull UUID owner, long lastSeen) {
-        getLogger().info("subscribe({}, {})", owner.toString(), lastSeen);
+    public EndpointSubscription<@Nonnull Cursor> subscribe(@Nonnull UUID owner, long lastSeen) {
         Flux<Cursor> flux = updateFlux
                 .filter(cursor -> !cursor.getId().equals(owner))
                 .filter(position -> position.getTimestamp() > lastSeen);
 
-        return flux;
+        return EndpointSubscription.of(flux, () -> {
+            cursors.remove(owner);
+
+            Cursor cursor = new Cursor();
+            cursor.setId(owner);
+            cursor.setColor("DELETE");
+            cursor.setTimestamp(System.currentTimeMillis());
+            updates.emitNext(cursor, (signalType, emitResult) -> emitResult == EmitResult.FAIL_NON_SERIALIZED);
+            getLogger().info("Removed cursor " + owner);
+            logCursors();
+        });
     }
 
     public void trackCursor(UUID id, int x, int y) {
-        getLogger().info("trackCursor({}, {}, {})", id.toString(), x, y);
+        // getLogger().info("trackCursor({}, {}, {})", id.toString(), x, y);
         long timestamp = System.currentTimeMillis();
 
         Cursor cursor = cursors.get(id);
@@ -80,6 +96,9 @@ public class CursorTracker {
         cursor.setTimestamp(timestamp);
 
         updates.emitNext(cursor, (signalType, emitResult) -> emitResult == EmitResult.FAIL_NON_SERIALIZED);
+        // getLogger().info("Updated cursor with id " + id);
+        // logCursors();
+
     }
 
     private Logger getLogger() {

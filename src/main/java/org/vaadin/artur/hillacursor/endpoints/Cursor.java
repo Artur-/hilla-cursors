@@ -63,4 +63,8 @@ public class Cursor {
         this.name = name;
     }
 
+    @Override
+    public String toString() {
+        return getId() + " (" + getName() + ")";
+    }
 }
