@@ -6,17 +6,18 @@ import './cursor-indicator';
 import client from './generated/connect-client.default';
 import { CursorTracker } from './generated/endpoints';
 import Cursor from './generated/org/vaadin/artur/hillacursor/endpoints/Cursor';
+import { keepAlive } from './util';
+
+let name: string = Math.random().toString(36).substring(2, 9);
+let cursorId: string | undefined;
 
 @customElement('cursor-tracker')
-export class TheView extends LitElement {
+export class CursorTrackerElement extends LitElement {
   cursorX: number = -1;
   cursorY: number = -1;
 
-  id: string = Math.random().toString(36).substring(2, 9);
-
   @state()
   cursors: Cursor[] = [];
-  cursorId: string | undefined;
   sendTimer: any;
   sub?: Subscription<Cursor>;
   @state()
@@ -30,12 +31,12 @@ export class TheView extends LitElement {
     });
 
     keepAlive(async () => {
-      this.cursorId = await CursorTracker.join(this.id);
-      this.cursors = await CursorTracker.getCursors(this.cursorId);
+      cursorId = await CursorTracker.join(name);
+      this.cursors = await CursorTracker.getCursors(cursorId);
       const maxTimestamp = Math.max(...this.cursors.map((c) => c.timestamp));
-      this.sub = CursorTracker.subscribe(this.cursorId, maxTimestamp).onNext((value: Cursor) => {
+      this.sub = CursorTracker.subscribe(cursorId, maxTimestamp).onNext((value: Cursor) => {
         console.debug('Got ', value);
-        if (value.id !== this.cursorId) {
+        if (value.id !== cursorId) {
           this.cursors = [...this.cursors.filter((cursor) => cursor.id !== value.id)];
           if (value.color !== 'DELETE') {
             this.cursors = [...this.cursors, value];
@@ -45,20 +46,19 @@ export class TheView extends LitElement {
     });
 
     const sendCursor = throttle(200, (cursorX: number, cursorY: number) => {
-      console.log('Sending', this.cursorId, cursorX, cursorY);
-      CursorTracker.trackCursor(this.cursorId, cursorX, cursorY);
+      console.log('Sending', cursorId, cursorX, cursorY);
+      CursorTracker.trackCursor(cursorId, cursorX, cursorY);
     });
 
     document.addEventListener('mousemove', (e: MouseEvent) => {
-      if (this.cursorId) {
+      if (cursorId) {
         sendCursor(e.clientX, e.clientY);
       }
     });
   }
 
   render() {
-    return html`<button @click=${() => this.close()}>close</button>
-
+    return html`
       ${this.updatesPaused
         ? html`<cursor-indicator
             .cursor=${{
@@ -67,20 +67,13 @@ export class TheView extends LitElement {
               x: 200,
             }}
           ></cursor-indicator>`
-        : this.cursors.map((cursor) => html`<cursor-indicator .cursor=${cursor}></cursor-indicator>`)} `;
+        : this.cursors.map((cursor) => html`<cursor-indicator .cursor=${cursor}></cursor-indicator>`)}
+    `;
   }
+}
 
-  close() {
-    this.sub?.cancel();
+export const updateName = (newName: string): void => {
+  if (cursorId) {
+    CursorTracker.updateName(cursorId, newName);
   }
-}
-function keepAlive(onReconnect: () => void) {
-  if (client.fluxConnection.state === State.ACTIVE) {
-    onReconnect();
-  }
-  client.fluxConnection.addEventListener('state-changed', (e: CustomEvent) => {
-    if (e.detail.active) {
-      onReconnect();
-    }
-  });
-}
+};

@@ -2,6 +2,9 @@ import '@vaadin/button';
 import '@vaadin/notification';
 import { Notification } from '@vaadin/notification';
 import '@vaadin/text-field';
+import { updateName } from 'Frontend/cursor-tracker';
+import client from 'Frontend/generated/connect-client.default';
+import { CursorTracker } from 'Frontend/generated/endpoints';
 import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { View } from '../../views/view';
@@ -27,5 +30,7 @@ export class HelloWorldView extends View {
   }
 
   async sayHello() {
+    updateName(this.name);
+    Notification.show(`Hello ${this.name}`);
   }
 }

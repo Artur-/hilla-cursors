@@ -54,6 +54,17 @@ public class CursorTracker {
         return id;
     }
 
+    public void updateName(@Nonnull UUID ownerId, @Nonnull String name) {
+        long timestamp = System.currentTimeMillis();
+
+        Cursor cursor = cursors.get(ownerId);
+        cursor.setTimestamp(timestamp);
+        cursor.setName(name);
+
+        updates.emitNext(cursor, (signalType, emitResult) -> emitResult == EmitResult.FAIL_NON_SERIALIZED);
+
+    }
+
     private void logCursors() {
         getLogger().info("Cursors are now:"
                 + cursors.values().stream().map(cursor -> "\n" + cursor).collect(Collectors.joining()));
