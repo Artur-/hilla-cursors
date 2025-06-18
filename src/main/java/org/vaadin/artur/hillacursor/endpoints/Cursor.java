@@ -2,17 +2,17 @@ package org.vaadin.artur.hillacursor.endpoints;
 
 import java.util.UUID;
 
-import dev.hilla.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 public class Cursor {
 
-    @Nonnull
+    @NonNull
     private UUID id;
     private float x, y;
     private long timestamp;
-    @Nonnull
+    @NonNull
     private String color;
-    @Nonnull
+    @NonNull
     private String name;
 
     public float getX() {

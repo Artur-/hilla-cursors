@@ -1,4 +1,4 @@
-import { State } from "@hilla/frontend";
+import { State } from "@vaadin/hilla-frontend";
 import client from "./generated/connect-client.default";
 
 export function keepAlive(onReconnect: () => void) {

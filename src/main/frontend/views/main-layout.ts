@@ -1,5 +1,5 @@
+import { MobxLitElement } from '@adobe/lit-mobx';
 import '@vaadin/app-layout';
-import { AppLayout } from '@vaadin/app-layout';
 import '@vaadin/app-layout/vaadin-drawer-toggle';
 import '@vaadin/avatar/vaadin-avatar';
 import '@vaadin/context-menu';
@@ -10,7 +10,6 @@ import { customElement } from 'lit/decorators.js';
 import { router } from '../index';
 import { views } from '../routes';
 import { appStore } from '../stores/app-store';
-import { Layout } from './view';
 
 interface RouteInfo {
   path: string;
@@ -19,7 +18,7 @@ interface RouteInfo {
 }
 
 @customElement('main-layout')
-export class MainLayout extends Layout {
+export class MainLayout extends MobxLitElement {
   render() {
     return html`
       <vaadin-app-layout primary-section="drawer">
@@ -57,12 +56,6 @@ export class MainLayout extends Layout {
   connectedCallback() {
     super.connectedCallback();
     this.classList.add('block', 'h-full');
-    this.reaction(
-      () => appStore.location,
-      () => {
-        AppLayout.dispatchCloseOverlayDrawerEvent();
-      }
-    );
   }
 
   private getMenuRoutes(): RouteInfo[] {

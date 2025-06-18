@@ -1,9 +1,9 @@
+import { MobxLitElement } from '@adobe/lit-mobx';
 import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { View } from '../../views/view';
 
 @customElement('about-view')
-export class AboutView extends View {
+export class AboutView extends MobxLitElement {
   render() {
     return html`<div>
       <img style="width: 200px;" src="images/empty-plant.png" />

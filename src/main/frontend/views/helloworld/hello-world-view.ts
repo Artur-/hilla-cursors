@@ -3,14 +3,12 @@ import '@vaadin/notification';
 import { Notification } from '@vaadin/notification';
 import '@vaadin/text-field';
 import { updateName } from 'Frontend/cursor-tracker';
-import client from 'Frontend/generated/connect-client.default';
-import { CursorTracker } from 'Frontend/generated/endpoints';
 import { html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { View } from '../../views/view';
+import { MobxLitElement } from '@adobe/lit-mobx';
 
 @customElement('hello-world-view')
-export class HelloWorldView extends View {
+export class HelloWorldView extends MobxLitElement {
   name = '';
 
   connectedCallback() {
@@ -18,6 +16,10 @@ export class HelloWorldView extends View {
     this.classList.add('flex', 'p-m', 'gap-m', 'items-end');
   }
 
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+      return this;
+  }
+  
   render() {
     return html`
       <vaadin-text-field label="Your name" @value-changed=${this.nameChanged}></vaadin-text-field>

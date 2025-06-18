@@ -7,20 +7,18 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.vaadin.flow.server.auth.AnonymousAllowed;
-
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import dev.hilla.Endpoint;
-import dev.hilla.EndpointSubscription;
-import dev.hilla.Nonnull;
 import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.core.publisher.Sinks.EmitResult;
 import reactor.core.publisher.Sinks.Many;
+
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.hilla.Endpoint;
+import com.vaadin.hilla.EndpointSubscription;
 
 @AnonymousAllowed
 @Endpoint
@@ -33,15 +31,14 @@ public class CursorTracker {
     private static final String[] colors = new String[] { "red", "green", "blue", "brown", "magenta", "mediumvioletred",
             "orange" };
 
-    @Autowired
     public CursorTracker() {
         updates = Sinks.many().multicast().directBestEffort();
         updateFlux = updates.asFlux().replay(Duration.ofSeconds(5));
         updateFlux.connect();
     }
 
-    @Nonnull
-    public UUID join(@Nonnull String name) {
+    @NonNull
+    public UUID join(@NonNull String name) {
         UUID id = UUID.randomUUID();
 
         Cursor cursor = new Cursor();
@@ -54,7 +51,7 @@ public class CursorTracker {
         return id;
     }
 
-    public void updateName(@Nonnull UUID ownerId, @Nonnull String name) {
+    public void updateName(@NonNull UUID ownerId, @NonNull String name) {
         long timestamp = System.currentTimeMillis();
 
         Cursor cursor = cursors.get(ownerId);
@@ -71,14 +68,14 @@ public class CursorTracker {
 
     }
 
-    @Nonnull
-    public List<@Nonnull Cursor> getCursors(@Nonnull UUID ownerId) {
+    @NonNull
+    public List<@NonNull Cursor> getCursors(@NonNull UUID ownerId) {
         return cursors.entrySet().stream().filter(entry -> !entry.getKey().equals(ownerId))
                 .map(entry -> entry.getValue()).toList();
     }
 
-    @Nonnull
-    public EndpointSubscription<@Nonnull Cursor> subscribe(@Nonnull UUID owner, long lastSeen) {
+    @NonNull
+    public EndpointSubscription<@NonNull Cursor> subscribe(@NonNull UUID owner, long lastSeen) {
         Flux<Cursor> flux = updateFlux
                 .filter(cursor -> !cursor.getId().equals(owner))
                 .filter(position -> position.getTimestamp() > lastSeen);

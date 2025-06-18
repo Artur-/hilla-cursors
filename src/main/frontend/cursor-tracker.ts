@@ -1,4 +1,4 @@
-import { Subscription, State } from '@hilla/frontend';
+import { Subscription } from '@vaadin/hilla-frontend';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { throttle } from 'throttle-debounce';
@@ -16,7 +16,7 @@ export class CursorTrackerElement extends LitElement {
   cursorX: number = -1;
   cursorY: number = -1;
 
-  @state()
+  @state() 
   cursors: Cursor[] = [];
   sendTimer: any;
   sub?: Subscription<Cursor>;
