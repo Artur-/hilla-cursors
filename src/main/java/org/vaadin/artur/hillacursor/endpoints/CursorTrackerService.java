@@ -22,7 +22,7 @@ import com.vaadin.hilla.EndpointSubscription;
 
 @AnonymousAllowed
 @Endpoint
-public class CursorTracker {
+public class CursorTrackerService {
 
     private Map<UUID, Cursor> cursors = new ConcurrentHashMap<>();
     private Many<Cursor> updates;
@@ -31,7 +31,7 @@ public class CursorTracker {
     private static final String[] colors = new String[] { "red", "green", "blue", "brown", "magenta", "mediumvioletred",
             "orange" };
 
-    public CursorTracker() {
+    public CursorTrackerService() {
         updates = Sinks.many().multicast().directBestEffort();
         updateFlux = updates.asFlux().replay(Duration.ofSeconds(5));
         updateFlux.connect();
