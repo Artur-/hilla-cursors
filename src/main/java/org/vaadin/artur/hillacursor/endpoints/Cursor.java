@@ -7,7 +7,7 @@ import org.jspecify.annotations.NonNull;
 public class Cursor {
 
     @NonNull
-    private UUID id;
+    private String id;
     private float x, y;
     private long timestamp;
     @NonNull
@@ -31,11 +31,11 @@ public class Cursor {
         this.y = y;
     }
 
-    public UUID getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void setId(String id) {
         this.id = id;
     }
 

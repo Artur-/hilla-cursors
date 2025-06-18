@@ -24,7 +24,7 @@ import com.vaadin.hilla.EndpointSubscription;
 @Endpoint
 public class CursorTrackerService {
 
-    private Map<UUID, Cursor> cursors = new ConcurrentHashMap<>();
+    private Map<String, Cursor> cursors = new ConcurrentHashMap<>();
     private Many<Cursor> updates;
     private ConnectableFlux<Cursor> updateFlux;
 
@@ -38,8 +38,8 @@ public class CursorTrackerService {
     }
 
     @NonNull
-    public UUID join(@NonNull String name) {
-        UUID id = UUID.randomUUID();
+    public String join(@NonNull String name) {
+        String id = UUID.randomUUID().toString();
 
         Cursor cursor = new Cursor();
         cursor.setName(name);
@@ -51,7 +51,7 @@ public class CursorTrackerService {
         return id;
     }
 
-    public void updateName(@NonNull UUID ownerId, @NonNull String name) {
+    public void updateName(@NonNull String ownerId, @NonNull String name) {
         long timestamp = System.currentTimeMillis();
 
         Cursor cursor = cursors.get(ownerId);
@@ -69,13 +69,13 @@ public class CursorTrackerService {
     }
 
     @NonNull
-    public List<@NonNull Cursor> getCursors(@NonNull UUID ownerId) {
+    public List<@NonNull Cursor> getCursors(@NonNull String ownerId) {
         return cursors.entrySet().stream().filter(entry -> !entry.getKey().equals(ownerId))
                 .map(entry -> entry.getValue()).toList();
     }
 
     @NonNull
-    public EndpointSubscription<@NonNull Cursor> subscribe(@NonNull UUID owner, long lastSeen) {
+    public EndpointSubscription<@NonNull Cursor> subscribe(@NonNull String owner, long lastSeen) {
         Flux<Cursor> flux = updateFlux
                 .filter(cursor -> !cursor.getId().equals(owner))
                 .filter(position -> position.getTimestamp() > lastSeen);
@@ -93,7 +93,7 @@ public class CursorTrackerService {
         });
     }
 
-    public void trackCursor(UUID id, int x, int y) {
+    public void trackCursor(String id, int x, int y) {
         // getLogger().info("trackCursor({}, {}, {})", id.toString(), x, y);
         long timestamp = System.currentTimeMillis();
 
