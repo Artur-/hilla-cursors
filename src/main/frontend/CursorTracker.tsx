@@ -1,5 +1,5 @@
 import { Subscription } from '@vaadin/hilla-frontend';
-import { Signal, useSignal } from '@vaadin/hilla-react-signals';
+import { signal, Signal, useSignal, ValueSignal } from '@vaadin/hilla-react-signals';
 import { useEffect } from 'react';
 import { throttle } from 'throttle-debounce';
 import { CursorIndicator } from './CursorIndicator';
@@ -7,45 +7,62 @@ import client from './generated/connect-client.default';
 import Cursor from './generated/org/vaadin/artur/hillacursor/endpoints/Cursor';
 import { keepAlive } from './util';
 import { CursorTrackerService } from './generated/endpoints';
-
+import { v4 as uuid } from 'uuid';
 let name: string = Math.random().toString(36).substring(2, 9);
-let cursorId: string | undefined;
 
+const id: string = uuid();
+const colors = ['red', 'green', 'blue', 'brown', 'magenta', 'mediumvioletred', 'orange'];
+const updatesPaused: Signal<boolean> = signal(false);
+const color = colors[id.charCodeAt(0) % colors.length];
+const cursors = CursorTrackerService.subscribe();
+console.log('Cursors', cursors);
+
+function findCursor(): ValueSignal<Cursor> | undefined {
+  return cursors.value.find((c) => c.value.id === id);
+}
 export function CursorTracker() {
-  const updatesPaused = useSignal(false);
-  const cursors: Signal<Cursor[]> = useSignal([]);
-  const sub: Signal<Subscription<Cursor> | undefined> = useSignal(undefined);
-
   useEffect(() => {
-    client.fluxConnection.addEventListener('state-changed', (e: CustomEvent) => {
-      updatesPaused.value = !e.detail.active;
-    });
-
-    keepAlive(async () => {
-      cursorId = await CursorTrackerService.join(name);
-      cursors.value = await CursorTrackerService.getCursors(cursorId);
-      const maxTimestamp = Math.max(...cursors.value.map((c) => c.timestamp));
-      sub.value = CursorTrackerService.subscribe(cursorId, maxTimestamp).onNext((value: Cursor) => {
-        console.debug('Got ', value);
-        if (value.id !== cursorId) {
-          cursors.value = [...cursors.value.filter((cursor) => cursor.id !== value.id)];
-          if (value.color !== 'DELETE') {
-            cursors.value = [...cursors.value, value];
-          }
-        }
+    const cursor: Cursor = {
+      name,
+      id,
+      color,
+      timestamp: Date.now(),
+      x: 0,
+      y: 0,
+    };
+    cursors
+      .insertLast(cursor)
+      .result.then(() => {
+        console.log('Cursor added', id, cursor);
+      })
+      .catch((e) => {
+        console.error('Error adding cursor', id, e);
       });
-    });
-
     const sendCursor = throttle(200, (cursorX: number, cursorY: number) => {
-      console.log('Sending', cursorId, cursorX, cursorY);
-      CursorTrackerService.trackCursor(cursorId, cursorX, cursorY);
-    });
-
-    document.addEventListener('mousemove', (e: MouseEvent) => {
-      if (cursorId) {
-        sendCursor(e.clientX, e.clientY);
+      const thisCursor = findCursor();
+      if (thisCursor) {
+      console.log('Sending', id, cursorX, cursorY);
+        thisCursor.value.x = cursorX;
+        thisCursor.value.y = cursorY;
+        thisCursor.value.timestamp = Date.now();
       }
     });
+
+    const moveListener = (e: MouseEvent) => {
+      sendCursor(e.clientX, e.clientY);
+    };
+
+    document.addEventListener('mousemove', moveListener);
+    return () => {
+      console.log('Unsubscribing from cursor updates');
+      const thisCursor = findCursor();
+      if (thisCursor) {
+        cursors.remove(thisCursor);
+      } else {
+        console.error('Did not find cursor to remove', id);
+      }
+      document.removeEventListener('mousemove', moveListener);
+    };
   }, []);
 
   if (updatesPaused.value) {
@@ -61,12 +78,17 @@ export function CursorTracker() {
         }}></CursorIndicator>
     );
   } else {
-    return cursors.value.map((cursor) => <CursorIndicator key={cursor.id} cursor={cursor}></CursorIndicator>);
+    console.log('Rendering cursors', cursors.value);
+
+    return cursors.value.map((cursor) => (
+      <CursorIndicator key={cursor.value.id} cursor={cursor.value}></CursorIndicator>
+    ));
   }
 }
 
 export const updateName = (newName: string): void => {
-  if (cursorId) {
-    CursorTrackerService.updateName(cursorId, newName);
+  const thisCursor = cursors.value.find((c) => c.id === id);
+  if (thisCursor) {
+    thisCursor.value.name = newName;
   }
 };
