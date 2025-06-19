@@ -1,5 +1,7 @@
 package org.vaadin.artur.hillacursor;
 
+import org.vaadin.artur.hillacursor.service.CursorTrackerService;
+
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.notification.Notification;
@@ -20,11 +22,12 @@ public class HelloWorldView extends HorizontalLayout {
     private final TextField name;
     private final Button sayHello;
 
-    public HelloWorldView() {
+    public HelloWorldView(CursorTrackerService cursorTrackerService, MyCursor myCursor) {
         name = new TextField("Your name");
         name.setHelperText("Write your name here");
         sayHello = new Button("Say hello");
         sayHello.addClickListener(e -> {
+            cursorTrackerService.updateName(myCursor.getId(), name.getValue());
             Notification.show("Hello " + name.getValue());
         });
         sayHello.addClickShortcut(Key.ENTER);

@@ -32,8 +32,8 @@ public final class MainLayout extends Div implements RouterLayout {
 
     private AppLayout appLayout;
 
-    MainLayout(CursorTrackerService cursorTrackerService) {
-        add(new CursorTracker(cursorTrackerService));
+    MainLayout(CursorTrackerService cursorTrackerService, MyCursor myCursor) {
+        add(new CursorTracker(cursorTrackerService, myCursor));
         appLayout = new AppLayout();
         add(appLayout);
         appLayout.setPrimarySection(AppLayout.Section.DRAWER);

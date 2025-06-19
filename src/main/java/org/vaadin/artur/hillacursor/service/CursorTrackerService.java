@@ -76,4 +76,15 @@ public class CursorTrackerService {
         });
     }
 
+    public void updateName(String id, String name) {
+        findCursor(id).ifPresentOrElse(cursorSignal -> cursorSignal.update(cursor -> {
+            cursor.setName(name);
+            cursor.setTimestamp(Instant.now().toEpochMilli());
+            System.out.println("Updated cursor " + id + " name to " + name);
+            return cursor;
+        }), () -> {
+            System.out.println("Cursor not found for name update: " + id);
+        });
+    }
+
 }

@@ -15,14 +15,15 @@ import com.vaadin.flow.component.html.Div;
 public class CursorTracker extends Div {
 
     private CursorTrackerService cursorTrackerService;
-    private String id;
+    private MyCursor myCursor;
 
-    public CursorTracker(CursorTrackerService cursorTrackerService) {
+    public CursorTracker(CursorTrackerService cursorTrackerService, MyCursor myCursor) {
         this.cursorTrackerService = cursorTrackerService;
+        this.myCursor = myCursor;
         ComponentEffect.effect(this, () -> {
             removeAll();
             cursorTrackerService.getCursors().value().forEach(cursor -> {
-                if (cursor.value().getId().equals(id)) {
+                if (cursor.value().getId().equals(myCursor.getId())) {
                     // Don't add own cursor
                     return;
                 }
@@ -34,19 +35,18 @@ public class CursorTracker extends Div {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         super.onAttach(attachEvent);
-        id = cursorTrackerService.registerCursor();
+        myCursor.setId(cursorTrackerService.registerCursor());
     }
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
         super.onDetach(detachEvent);
-        cursorTrackerService.unregisterCursor(id);
-        id = null;
+        cursorTrackerService.unregisterCursor(myCursor.getId());
+        myCursor.setId(null);
     }
 
     @ClientCallable
     public void updateCursor(int x, int y) {
-        cursorTrackerService.updateCursor(id, x, y);
+        cursorTrackerService.updateCursor(myCursor.getId(), x, y);
     }
-
 }
