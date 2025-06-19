@@ -1,7 +1,20 @@
-import Cursor from './generated/org/vaadin/artur/hillacursor/endpoints/Cursor';
+import { ReactElement } from 'react';
+import { ReactAdapterElement, RenderHooks } from './generated/flow/ReactAdapter';
 
+type Cursor = {
+  x: number;
+  y: number;
+  name: string;
+  color: string;
+};
+
+class CursorIndicatorClass   extends ReactAdapterElement {
+  protected override render(hooks: RenderHooks): ReactElement | null {
+    const [cursor, _setCursor] = hooks.useState<Cursor>('cursor');
+    return <CursorIndicator cursor={cursor} />;
+  }
+}
 export function CursorIndicator({ cursor }: { cursor: Cursor }) {
-  const foo = cursor.name;
   return (
     <svg
       style={{
@@ -27,3 +40,5 @@ export function CursorIndicator({ cursor }: { cursor: Cursor }) {
     </svg>
   );
 }
+
+customElements.define('cursor-indicator', CursorIndicatorClass);

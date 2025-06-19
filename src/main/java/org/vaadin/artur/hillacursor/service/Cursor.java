@@ -1,6 +1,4 @@
-package org.vaadin.artur.hillacursor.endpoints;
-
-import java.util.UUID;
+package org.vaadin.artur.hillacursor.service;
 
 import org.jspecify.annotations.NonNull;
 
