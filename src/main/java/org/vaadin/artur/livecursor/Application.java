@@ -1,4 +1,4 @@
-package org.vaadin.artur.hillacursor;
+package org.vaadin.artur.livecursor;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

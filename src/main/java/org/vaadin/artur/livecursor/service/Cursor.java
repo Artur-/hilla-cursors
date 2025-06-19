@@ -1,4 +1,4 @@
-package org.vaadin.artur.hillacursor.service;
+package org.vaadin.artur.livecursor.service;
 
 import org.jspecify.annotations.NonNull;
 

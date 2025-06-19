@@ -1,4 +1,4 @@
-package org.vaadin.artur.hillacursor.service;
+package org.vaadin.artur.livecursor.service;
 
 import java.time.Instant;
 import java.util.Optional;

@@ -1,6 +1,6 @@
-package org.vaadin.artur.hillacursor;
+package org.vaadin.artur.livecursor;
 
-import org.vaadin.artur.hillacursor.service.CursorTrackerService;
+import org.vaadin.artur.livecursor.service.CursorTrackerService;
 
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;

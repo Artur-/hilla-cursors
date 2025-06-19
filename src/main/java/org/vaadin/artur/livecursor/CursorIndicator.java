@@ -1,6 +1,6 @@
-package org.vaadin.artur.hillacursor;
+package org.vaadin.artur.livecursor;
 
-import org.vaadin.artur.hillacursor.service.Cursor;
+import org.vaadin.artur.livecursor.service.Cursor;
 
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.dependency.JsModule;
