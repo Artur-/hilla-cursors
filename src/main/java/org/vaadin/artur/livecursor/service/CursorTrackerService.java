@@ -1,19 +1,18 @@
 package org.vaadin.artur.livecursor.service;
 
 import java.time.Instant;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
-import com.vaadin.signals.ListSignal;
+import com.vaadin.signals.MapSignal;
 import com.vaadin.signals.ValueSignal;
 
 @Service
 public class CursorTrackerService {
 
-    private static ListSignal<@NonNull Cursor> cursors = new ListSignal<>(Cursor.class);
+    private static MapSignal<@NonNull Cursor> cursors = new MapSignal<>(Cursor.class);
     private static String[] colors = new String[] { "red", "green", "blue", "brown", "magenta", "mediumvioletred",
             "orange" };
 
@@ -28,7 +27,7 @@ public class CursorTrackerService {
         cursor.setX(0);
         cursor.setY(0);
         cursor.setTimestamp(Instant.now().toEpochMilli());
-        cursors.insertLast(cursor);
+        cursors.put(cursor.getId(), cursor);
 
         System.out.println("Registered cursor: " + id);
         printCursors();
@@ -37,54 +36,48 @@ public class CursorTrackerService {
 
     private void printCursors() {
         System.out.println("Current cursors:");
-        cursors.value().forEach(cursor -> {
+        cursors.value().forEach((id, cursor) -> {
             System.out.println(" - " + cursor.value().getId() + " at (" + cursor.value().getX() + ", "
                     + cursor.value().getY() + ") with color " + cursor.value().getColor());
         });
         System.out.println();
     }
 
-    public ListSignal<Cursor> getCursors() {
-        return cursors;
+    public MapSignal<@NonNull Cursor> getCursors() {
+        return cursors.asReadonly();
     }
 
     public void unregisterCursor(String id) {
         System.out.println("Unregistering cursor: " + id);
-        findCursor(id).ifPresentOrElse(cursor -> {
-            cursors.remove(cursor);
-            System.out.println("Unregistered cursor: " + id);
-        }, () -> {
-            System.out.println("Cursor not found: " + id);
-        });
-    }
-
-    private Optional<ValueSignal<Cursor>> findCursor(String id) {
-        return cursors.value().stream()
-                .filter(cursor -> id.equals(cursor.value().getId()))
-                .findFirst();
+        cursors.remove(id);
+        System.out.println("Unregistered cursor: " + id);
     }
 
     public void updateCursor(String id, int x, int y) {
-        findCursor(id).ifPresentOrElse(cursorSignal -> cursorSignal.update(cursor -> {
-            cursor.setX(x);
-            cursor.setY(y);
-            cursor.setTimestamp(Instant.now().toEpochMilli());
-            System.out.println("Updated cursor " + id + " to " + x + ", " + y);
-            return cursor;
-        }), () -> {
-            System.out.println("Cursor not found for update: " + id);
-        });
+        ValueSignal<Cursor> cursorSignal = cursors.value().get(id);
+        if (cursorSignal != null) {
+            cursorSignal.update(cursor -> {
+                cursor.setX(x);
+                cursor.setY(y);
+                cursor.setTimestamp(Instant.now().toEpochMilli());
+                System.out.println("Updated cursor " + id + " to " + x + ", " + y);
+                return cursor;
+            });
+        }
     }
 
     public void updateName(String id, String name) {
-        findCursor(id).ifPresentOrElse(cursorSignal -> cursorSignal.update(cursor -> {
-            cursor.setName(name);
-            cursor.setTimestamp(Instant.now().toEpochMilli());
-            System.out.println("Updated cursor " + id + " name to " + name);
-            return cursor;
-        }), () -> {
+        ValueSignal<Cursor> cursorSignal = cursors.value().get(id);
+        if (cursorSignal != null) {
+            cursorSignal.update(cursor -> {
+                cursor.setName(name);
+                cursor.setTimestamp(Instant.now().toEpochMilli());
+                System.out.println("Updated cursor " + id + " name to " + name);
+                return cursor;
+            });
+        } else {
             System.out.println("Cursor not found for name update: " + id);
-        });
+        }
     }
 
 }

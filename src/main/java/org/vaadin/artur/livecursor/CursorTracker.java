@@ -22,8 +22,8 @@ public class CursorTracker extends Div {
         this.myCursor = myCursor;
         ComponentEffect.effect(this, () -> {
             removeAll();
-            cursorTrackerService.getCursors().value().forEach(cursor -> {
-                if (cursor.value().getId().equals(myCursor.getId())) {
+            cursorTrackerService.getCursors().value().forEach((id, cursor) -> {
+                if (id.equals(myCursor.getId())) {
                     // Don't add own cursor
                     return;
                 }
